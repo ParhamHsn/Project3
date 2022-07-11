@@ -115,32 +115,49 @@ train.y = data[train,16]
 test.x = data[-train,-16]
 test.y = data[-train,16]
 
+fit<-glm(SubstanceRelease ~ Significant ,family = binomial(link="logit"),data=cbind(train.x,train.y))
+summary(fit)
+yhat<-round(predict.glm(fit,newdata = test.x,type = "response"))
+tb<-table(yhat,as.data.frame(test.y)[,1])
+sum(diag(tb))/sum(tb)
+
 fit1<-glm(SubstanceRelease ~ Latitude + Longitude ,family = binomial(link="logit"),data=cbind(train.x,train.y))
-fit1
 summary(fit1)
 yhat<-round(predict.glm(fit1,newdata = test.x,type = "response"))
 tb<-table(yhat,as.data.frame(test.y)[,1])
 sum(diag(tb))/sum(tb)
 
-fit2<-glm(SubstanceRelease ~ Latitude + Longitude + Province,family = binomial(link="logit"),data=data)
-fit2
+fit2<-glm(SubstanceRelease ~ Province,family = binomial(link="logit"),data=cbind(train.x,train.y))
 summary(fit2)
 yhat<-round(predict.glm(fit2,newdata = test.x,type = "response"))
 tb<-table(yhat,as.data.frame(test.y)[,1])
 sum(diag(tb))/sum(tb)
 
-fit3<-glm(SubstanceRelease ~ Latitude + Longitude + Province + Significant,family = binomial(link="logit"),data=data)
-fit3
+
+fit3<-glm(SubstanceRelease ~ Release.Type,family = binomial(link="logit"),data=cbind(train.x,train.y))
 summary(fit3)
 yhat<-round(predict.glm(fit3,newdata = test.x,type = "response"))
 tb<-table(yhat,as.data.frame(test.y)[,1])
 sum(diag(tb))/sum(tb)
 
-
-fit4<-glm(SubstanceRelease ~ Release.Type,family = binomial(link="logit"),data=data)
-fit4
+fit4<-glm(SubstanceRelease ~ Status,family = binomial(link="logit"),data=cbind(train.x,train.y))
 summary(fit4)
 yhat<-round(predict.glm(fit4,newdata = test.x,type = "response"))
 tb<-table(yhat,as.data.frame(test.y)[,1])
 sum(diag(tb))/sum(tb)
+
+#fit5<-glm(SubstanceRelease ~ Substance,family = #binomial(link="logit"),data=cbind(train.x,train.y))
+#yhat<-round(predict.glm(fit5,newdata = test.x,type = "response"))
+#tb<-table(yhat,as.data.frame(test.y)[,1])
+#sum(diag(tb))/sum(tb)
+
+#fit6<-glm(SubstanceRelease ~ Nearest.Populated.Centre,family = #binomial(link="logit"),data=cbind(train.x,train.y))
+#yhat<-round(predict.glm(fit6,newdata = test.x,type = "response"))
+#tb<-table(yhat,as.data.frame(test.y)[,1])
+#sum(diag(tb))/sum(tb)
+
+#fit6<-glm(SubstanceRelease ~ Company,family = #binomial(link="logit"),data=cbind(train.x,train.y))
+#yhat<-round(predict.glm(fit6,newdata = test.x,type = "response"))
+#tb<-table(yhat,as.data.frame(test.y)[,1])
+#sum(diag(tb))/sum(tb)
 ```
