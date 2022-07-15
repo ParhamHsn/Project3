@@ -1,23 +1,54 @@
 ---
 title: "Project 3"
-author: "Parham & Banafshe"
+author: "Parham Hassan & Banafshe Monfared"
 date: '2022-07-15'
 output: pdf_document
 ---
+#### Background
 
-```{r}
+The Canada Energy Regulator has a mandate to protect people and the environment during construction, operation, and abandonment of oil and gas pipelines and associated facilities. Despite its best efforts in prevention and mitigation, sometimes incidents that lead to adverse effects to people and the environment can happen. In the past 12 years there have been 723 incidents that involved release of substance.
+
+
+#### Data Description
+
+The CER provides an open dataset of 723 incidents, from 2008 to 2020. 
+
+#### Main Question 
+
+For this case study, we would like to understand what geographical and meteorological factors are associated with an incident that involves a release of substance. The dependent variable is probability of a geographical location having an incident and the independent variables are geographical (population density, type of land use, and other variables teams find relevant to include) and meteorological variables.
+
+
+### Introduction
+
+We start by loading relevant packages and loading the Data :
+
+
+```{r echo=TRUE}
+library(ggplot2)
+library(ggthemes)
+
+
 library(tidyverse)
-data <- read_csv("C:\\Users\\Parham\\Desktop\\projectData.csv")
+data <- read_csv("C:\\Users\\Banafshe\\Desktop\\projectData1.csv")
 data <- data%>%
   rename(SubstanceRelease = `Substance release`)
 glimpse(data)
+
 ```
 
-```{r}
+After that , we are going to see the number of yearly substance releases spliting them by yes or no .
+
+```{r echo=TRUE}
 t<-data%>%
   group_by(Year,SubstanceRelease)%>%
   summarize(Cnt = n())
-t
+
+```
+
+for better comprehension ,we will plot our outcome :
+
+
+```{r echo=TRUE}
 t%>%
   ggplot(aes(x=Year, y=Cnt,fill=SubstanceRelease)) +
   geom_bar(stat="identity")
@@ -26,51 +57,126 @@ t<-pivot_wider(
   names_from = SubstanceRelease,
   values_from = `Cnt`,
 )
-t
+
 ```
 
-```{r fig.height = 10, fig.width = 15} 
+this plot shows us the yearly substance releases from 2008 to 2020,on average we can see a gradual growth from 2008 until 2017 and then a noticeable reduction from 2017 until 2020 .
+
+
+
+In this section we dive a little bit deeper into our data , we want to see the substance release in each Province:
+
+```{r}
 t2<-data%>%
   group_by(Province,SubstanceRelease)%>%
   summarize(Cnt = n())%>%
   arrange(desc(Cnt))
 t2
-t2%>%
-  ggplot(aes(x=Province, y=Cnt,fill=SubstanceRelease)) +
-  geom_bar(stat="identity")
+
+
 ```
 
+also for better comparison , we have sorted the number of releases in order to have a better prospective of the data . 
+
+
+
+for better comprehension ,we will plot our outcome :
+```{r echo=TRUE}
+
+library(ggplot2)
+
+t2%>%
+  ggplot(aes(x=Province, y=Cnt,fill=SubstanceRelease)) +
+  geom_bar(stat="identity",width = 0.5)+
+  scale_x_discrete(guide = guide_axis(n.dodge=2))+
+   labs( y = "Number Of Releases", x = "Province")+
+  theme_fivethirtyeight() +
+  scale_fill_fivethirtyeight() +
+  theme(legend.position = "top")
+  
+
+```
+As illustrated above , we can see the probability of substance releases in some provinces vividly.for example in New Brunswick since the portion of substance release being ***Yes*** is much bigger than substance release being ***No***;that means we have a higher chance of predicting the substance release being ***Yes***.
+
+On the contrary,prediction of this is more difficult in provinces such as Ontario since the portions for substance releases happening or not is approximately equal.
+
+In conclusion , some of these provinces can help of with the prediction of substance releases.
+
+
+
+for our next step,we will have to check the ***Companies*** and the number of releases:
 ```{r}
 t3<-data%>%
   group_by(Company,SubstanceRelease)%>%
   summarize(Cnt = n())
 t3
-t3[1:15,]%>%
-  ggplot(aes(x=Company, y=Cnt,fill=SubstanceRelease)) +
-  geom_bar(stat="identity")
+
+
 ```
 
+
+```{r}
+t3[1:15,]%>%
+  ggplot(aes(x=Company, y=Cnt,fill=SubstanceRelease)) +
+  geom_bar(stat="identity")+
+#scale_x_discrete(guide = guide_axis(n.dodge=))
+  labs( y = "Number Of Releases", x = "Company")+
+    theme(axis.text.y = element_text(size = 4),
+        axis.text.x = element_text(angle=90, hjust=1,size=2.98,vjust = 0),
+        axis.title = element_text(size = 5),legend.title  = element_text(size = 6),legend.text = element_text(size = 4))+
+  coord_flip()
+  
+```
+As it can be seen from the plot , just like `Province` , `Company` is a useful variable for the prediction of substance releases .
+
+
+
+
+Next , we take a look at `Status` . this variable has three levels : ***Closed*** , ***Submitted*** and ***Initially Submitted***.
 ```{r}
 t4<-data%>%
   group_by(Status,SubstanceRelease)%>%
   summarize(Cnt = n())%>%
   arrange(desc(Cnt))
 t4
-t4%>%
-  ggplot(aes(x=Status, y=Cnt,fill=SubstanceRelease)) +
-  geom_bar(stat="identity")
+
 ```
 
+```{r}
+t4%>%
+  ggplot(aes(x=Status, y=Cnt,fill=SubstanceRelease)) +
+  geom_bar(stat="identity",position = position_dodge())+
+   scale_y_continuous(expand=c(0,0))+
+  labs( y = "Number Of Releases", x = "Status")
+```
+
+As you can see , this variable does not help that much in our model . Since the proportion in different levels of Substance releases is not that different in ***Closed*** ,and for the rest the difference is small .
+
+
+
+
+After that , we check the variable `Significant`
 ```{r}
 t5<-data%>%
   group_by(Significant,SubstanceRelease)%>%
   summarize(Cnt = n())%>%
   arrange(desc(Cnt))
 t5
+
+
+```
+
+```{r}
 t5%>%
   ggplot(aes(x=Significant, y=Cnt,fill=SubstanceRelease)) +
-  geom_bar(stat="identity")
+  geom_bar(stat="identity")+ 
+  labs( y = "Number Of Releases", x = "Significant") 
 ```
+As you can observe from above , the proportions between substance release happening or not is equaly distributed in this variable .So this variable is not gonna be very useful.
+
+
+
+Next, we have to tackle `Release.Type` .this variable has four levels which are ***Not Applicable***,	***Gas***,	***liquid*** and ***Miscellaneous*** .	
 
 ```{r}
 t6<-data%>%
@@ -80,9 +186,17 @@ t6<-data%>%
 t6
 t6%>%
   ggplot(aes(x=Release.Type, y=Cnt,fill=SubstanceRelease)) +
-  geom_bar(stat="identity")
+  geom_bar(stat="identity")+
+   labs( y = "Number Of Releases", x = "Release Type")
 ```
 
+
+Other than the release type ***Not Applicable*** ,substance release always happen is rest of them .this give us the prediction of 100% which is not reasonable to use in our model.	
+
+
+
+
+This variable is for diffrent substances that release in our data 
 ```{r}
 t7<-data%>%
   group_by(Substance,SubstanceRelease)%>%
@@ -91,21 +205,60 @@ t7<-data%>%
 t7
 t7%>%
   ggplot(aes(x=Substance, y=Cnt,fill=SubstanceRelease)) +
-  geom_bar(stat="identity")
+  geom_bar(stat="identity")+
+   labs( y = "Number Of Releases", x = "Substance")+
+  coord_flip()
 ```
+
+as you can see by the plot above , `Substance` has many categories but yet it can come handy while perdicting the model.
+
 
 ```{r}
 table(data$SubstanceRelease,data$Release.Type)
 table(data$SubstanceRelease,data$Significant)
 chisq.test(table(data$SubstanceRelease,data$Significant))
+
+n.why.It.Happend<-c()
+n.What.Happened<-c()
+for(i in 1:1624)
+{
+  n.why.It.Happend <- c(n.why.It.Happend,length(strsplit(data$Why.It.Happened[i],",")[[1]]))
+  n.What.Happened <- c(n.What.Happened,length(strsplit(data$What.Happened[i],",")[[1]]))
+}
+data<-data%>%
+  mutate(n.why.It.Happend = n.why.It.Happend,
+         n.What.Happened = n.What.Happened)
 ```
 
-#modeling with tain and test
+K-means Algorithm For Latitude & Longitude
+
+```{r}
+r = c()
+for(i in 2:20)
+{
+  k = kmeans(cbind(data$Latitude,data$Longitude) , centers = i)
+  r = c(r,k$tot.withinss / k$betweenss)
+}
+d<-as.data.frame(cbind(2:20,r))
+colnames(d)<-c("Centers" , "r")
+ggplot(d,aes(x=Centers,y=r))+
+  geom_point()
+k = kmeans(cbind(data$Latitude,data$Longitude) , centers = 10)
+k_m = as.factor(k$cluster)
+data<-data%>%
+  mutate(k = k_m)
+```
+
+
+####Modeling With Train and Test 
 
 ```{r}
 data<-data%>%
   mutate(SubstanceRelease = ifelse(SubstanceRelease == "Yes",1,0),
          Significant = ifelse(Significant == "Yes",1,0))
+data<-data%>%
+  mutate(Province = ifelse(Province %in% c("British Columbia","Northwest Territories"
+,"Ontario","Saskatchewan","Quebec"),"Other",Province))
 n<-nrow(data)
 n.train = trunc(0.7*n)
 n.test = n - n.train
@@ -115,11 +268,20 @@ train.y = data[train,16]
 test.x = data[-train,-16]
 test.y = data[-train,16]
 
+fit<-glm(SubstanceRelease ~ k,family = binomial(link="logit"),data=cbind(train.x,train.y))
+fit
+summary(fit)
+yhat<-round(predict.glm(fit,newdata = test.x,type = "response"))
+tb<-table(yhat,as.data.frame(test.y)[,1])
+sum(diag(tb))/sum(tb)
+
+
 fit<-glm(SubstanceRelease ~ Significant ,family = binomial(link="logit"),data=cbind(train.x,train.y))
 summary(fit)
 yhat<-round(predict.glm(fit,newdata = test.x,type = "response"))
 tb<-table(yhat,as.data.frame(test.y)[,1])
 sum(diag(tb))/sum(tb)
+
 
 fit1<-glm(SubstanceRelease ~ Latitude + Longitude ,family = binomial(link="logit"),data=cbind(train.x,train.y))
 summary(fit1)
@@ -127,12 +289,19 @@ yhat<-round(predict.glm(fit1,newdata = test.x,type = "response"))
 tb<-table(yhat,as.data.frame(test.y)[,1])
 sum(diag(tb))/sum(tb)
 
+
 fit2<-glm(SubstanceRelease ~ Province,family = binomial(link="logit"),data=cbind(train.x,train.y))
 summary(fit2)
 yhat<-round(predict.glm(fit2,newdata = test.x,type = "response"))
 tb<-table(yhat,as.data.frame(test.y)[,1])
 sum(diag(tb))/sum(tb)
 
+fit<-glm(SubstanceRelease ~ Year ,family = binomial(link="logit"),data=cbind(train.x,train.y))
+fit
+summary(fit)
+yhat<-round(predict.glm(fit,newdata = test.x,type = "response"))
+tb<-table(yhat,as.data.frame(test.y)[,1])
+sum(diag(tb))/sum(tb)
 
 fit3<-glm(SubstanceRelease ~ Release.Type,family = binomial(link="logit"),data=cbind(train.x,train.y))
 summary(fit3)
@@ -140,12 +309,28 @@ yhat<-round(predict.glm(fit3,newdata = test.x,type = "response"))
 tb<-table(yhat,as.data.frame(test.y)[,1])
 sum(diag(tb))/sum(tb)
 
+
 fit4<-glm(SubstanceRelease ~ Status,family = binomial(link="logit"),data=cbind(train.x,train.y))
 summary(fit4)
 yhat<-round(predict.glm(fit4,newdata = test.x,type = "response"))
 tb<-table(yhat,as.data.frame(test.y)[,1])
 sum(diag(tb))/sum(tb)
 
+
+fit<-glm(SubstanceRelease ~ Year + Province,family = binomial(link="logit"),data=cbind(train.x,train.y))
+fit
+summary(fit)
+yhat<-round(predict.glm(fit,newdata = test.x,type = "response"))
+tb<-table(yhat,as.data.frame(test.y)[,1])
+sum(diag(tb))/sum(tb)
+
+```
+
+
+
+
+
+```{r}
 #fit5<-glm(SubstanceRelease ~ Substance,family = #binomial(link="logit"),data=cbind(train.x,train.y))
 #yhat<-round(predict.glm(fit5,newdata = test.x,type = "response"))
 #tb<-table(yhat,as.data.frame(test.y)[,1])
@@ -160,4 +345,55 @@ sum(diag(tb))/sum(tb)
 #yhat<-round(predict.glm(fit6,newdata = test.x,type = "response"))
 #tb<-table(yhat,as.data.frame(test.y)[,1])
 #sum(diag(tb))/sum(tb)
+
+
+
+
+
 ```
+
+As you can see above , we did not include these variables in the model since  they would cause errors in test and training process because of the many classes they each have .(and for some reason in this process some of the classes disappear! ).also fixing this issue  is tremendously time consuming and there is no reasonable way to merge these classes together in order to get decent results.
+
+```{r}
+
+fit<-glm(SubstanceRelease ~ n.What.Happened + n.why.It.Happend + Latitude + Longitude + Year + Province + Status + Significant,family = binomial(link="logit"),data=cbind(train.x,train.y))
+fit
+summary(fit)
+yhat<-round(predict.glm(fit,newdata = test.x,type = "response"))
+tb<-table(yhat,as.data.frame(test.y)[,1])
+sum(diag(tb))/sum(tb)
+
+
+fit<-glm(SubstanceRelease ~ Latitude + Longitude + Year + Province,family = binomial(link="logit"),data=cbind(train.x,train.y))
+fit
+summary(fit)
+yhat<-round(predict.glm(fit,newdata = test.x,type = "response"))
+tb<-table(yhat,as.data.frame(test.y)[,1])
+sum(diag(tb))/sum(tb)
+
+
+fit<-glm(SubstanceRelease ~ k + Year + Province,family = binomial(link="logit"),data=cbind(train.x,train.y))
+fit
+summary(fit)
+yhat<-round(predict.glm(fit,newdata = test.x,type = "response"))
+tb<-table(yhat,as.data.frame(test.y)[,1])
+sum(diag(tb))/sum(tb)
+
+
+fit<-glm(SubstanceRelease ~ k + Year,family = binomial(link="logit"),data=cbind(train.x,train.y))
+fit
+summary(fit)
+yhat<-round(predict.glm(fit,newdata = test.x,type = "response"))
+tb<-table(yhat,as.data.frame(test.y)[,1])
+sum(diag(tb))/sum(tb)
+
+
+```
+
+
+
+#### Conclusion 
+
+finally , we did not include  some of the variables (e.g `Release Type` or `Company`)  in our model(we explained the reasoning behind these decisions before),other than those ,our model gave us an accuracy of approximately 70 %.
+this is the best result we could achieve due to the fact that our results vary from 50% to 70%.
+
