@@ -83,21 +83,40 @@ fit<-glm(SubstanceRelease ~ Significant,family = binomial(link="logit"),data=dat
 fit
 summary(fit)
 
-tb<-as.data.frame(table(data$SubstanceRelease,data$Substance))
-tb<-as.tibble(tb)
-tb
-colnames(tb) =c("Substance Release" , "Substance","Freq")
-tb<-tb%>%
-  arrange(Freq)
+n.why.It.Happend<-c()
+n.What.Happened<-c()
+for(i in 1:1624)
+{
+  n.why.It.Happend <- c(n.why.It.Happend,length(strsplit(data$Why.It.Happened[i],",")[[1]]))
+  n.What.Happened <- c(n.What.Happened,length(strsplit(data$What.Happened[i],",")[[1]]))
+}
+data<-data%>%
+  mutate(n.why.It.Happend = n.why.It.Happend,
+         n.What.Happened = n.What.Happened)
 
-fit1<-glm(SubstanceRelease ~ Latitude + Longitude ,family = binomial(link="logit"),data=data)
-fit1
-summary(fit1)
+
+r = c()
+for(i in 2:20)
+{
+  k = kmeans(cbind(data$Latitude,data$Longitude) , centers = i)
+  r = c(r,k$tot.withinss / k$betweenss)
+  
+}
+r
+plot(2:20,r)
 
 
-fit2<-glm(SubstanceRelease ~ Latitude + Longitude + Province,family = binomial(link="logit"),data=data)
-fit2
-summary(fit2)
+k = kmeans(cbind(data$Latitude,data$Longitude) , centers = 10)
+k_m = as.factor(k$cluster)
+data<-data%>%
+  mutate(k = k_m)
+
+fit<-glm(SubstanceRelease ~ k,family = binomial(link="logit"),data=cbind(train.x,train.y))
+fit
+summary(fit)
+yhat<-round(predict.glm(fit,newdata = test.x,type = "response"))
+tb<-table(yhat,as.data.frame(test.y)[,1])
+sum(diag(tb))/sum(tb)
 
 n<-nrow(data)
 n.train = trunc(0.7*n)
@@ -115,14 +134,14 @@ yhat<-round(predict.glm(fit1,newdata = test.x,type = "response"))
 tb<-table(yhat,as.data.frame(test.y)[,1])
 sum(diag(tb))/sum(tb)
 
-fit2<-glm(SubstanceRelease ~ Latitude + Longitude + Province,family = binomial(link="logit"),data=data)
+fit2<-glm(SubstanceRelease ~ Province,family = binomial(link="logit"),data=cbind(train.x,train.y))
 fit2
 summary(fit2)
 yhat<-round(predict.glm(fit2,newdata = test.x,type = "response"))
 tb<-table(yhat,as.data.frame(test.y)[,1])
 sum(diag(tb))/sum(tb)
 
-fit3<-glm(SubstanceRelease ~ Latitude + Longitude + Province + Significant,family = binomial(link="logit"),data=data)
+fit3<-glm(SubstanceRelease ~ Latitude + Longitude + Province + Significant,family = binomial(link="logit"),data=cbind(train.x,train.y))
 fit3
 summary(fit3)
 yhat<-round(predict.glm(fit3,newdata = test.x,type = "response"))
@@ -130,7 +149,7 @@ tb<-table(yhat,as.data.frame(test.y)[,1])
 sum(diag(tb))/sum(tb)
 
 
-fit4<-glm(SubstanceRelease ~ Release.Type,family = binomial(link="logit"),data=data)
+fit4<-glm(SubstanceRelease ~ Release.Type,family = binomial(link="logit"),data=cbind(train.x,train.y))
 fit4
 summary(fit4)
 yhat<-round(predict.glm(fit4,newdata = test.x,type = "response"))
@@ -138,9 +157,57 @@ tb<-table(yhat,as.data.frame(test.y)[,1])
 sum(diag(tb))/sum(tb)
 
 
-fit5<-glm(SubstanceRelease ~ Substance,family = binomial(link="logit"),data=data)
+fit5<-glm(SubstanceRelease ~ Substance,family = binomial(link="logit"),data=cbind(train.x,train.y))
 fit5
 summary(fit5)
 yhat<-round(predict.glm(fit5,newdata = test.x,type = "response"))
+tb<-table(yhat,as.data.frame(test.y)[,1])
+sum(diag(tb))/sum(tb)
+
+fit6<-glm(SubstanceRelease ~ Nearest.Populated.Centre,family = binomial(link="logit"),data=cbind(train.x,train.y))
+#fit6
+#summary(fit6)
+yhat<-round(fitted.values(fit6))
+tb<-table(yhat,as.data.frame(train.y)[,1])
+sum(diag(tb))/sum(tb)
+
+yhat<-round(predict.glm(fit6,newdata = test.x,type = "response"))
+tb<-table(yhat,as.data.frame(test.y)[,1])
+sum(diag(tb))/sum(tb)
+
+
+
+fit<-glm(SubstanceRelease ~ Year,family = binomial(link="logit"),data=cbind(train.x,train.y))
+fit
+summary(fit)
+yhat<-fitted.values(fit)
+yhat<-round(predict.glm(fit,newdata = test.x,type = "response"))
+tb<-table(yhat,as.data.frame(test.y)[,1])
+sum(diag(tb))/sum(tb)
+
+
+fit<-glm(SubstanceRelease ~ Year + n.why.It.Happend,family = binomial(link="logit"),data=cbind(train.x,train.y))
+fit
+summary(fit)
+yhat<-fitted.values(fit)
+yhat<-round(predict.glm(fit,newdata = test.x,type = "response"))
+tb<-table(yhat,as.data.frame(test.y)[,1])
+sum(diag(tb))/sum(tb)
+
+
+fit<-glm(SubstanceRelease ~ Year + Province + Status + Significant,family = binomial(link="logit"),data=cbind(train.x,train.y))
+fit
+summary(fit)
+yhat<-round(predict.glm(fit,newdata = test.x,type = "response"))
+tb<-table(yhat,as.data.frame(test.y)[,1])
+sum(diag(tb))/sum(tb)
+
+
+
+
+fit<-glm(SubstanceRelease ~ + n.What.Happened,family = binomial(link="logit"),data=cbind(train.x,train.y))
+fit
+summary(fit)
+yhat<-round(predict.glm(fit,newdata = test.x,type = "response"))
 tb<-table(yhat,as.data.frame(test.y)[,1])
 sum(diag(tb))/sum(tb)
